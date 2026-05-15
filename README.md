@@ -1,4 +1,4 @@
-# 🚆 IRCTC Seat Tracker
+# IRCTC Seat Tracker
 
 Automated IRCTC seat availability monitoring with email alerts, user accounts, and a live dashboard.
 
