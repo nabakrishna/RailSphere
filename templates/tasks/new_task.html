@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+{% block title %}New Tracking Task — IRCTC Tracker{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width:640px">
+  <h1 class="page-title">New Tracking Task</h1>
+  <p class="page-sub">Set up automated seat availability monitoring for a train journey.</p>
+
+  <div class="card">
+    <form method="POST" id="taskForm">
+      <h3 style="font-size:14px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:16px">
+        <i class="fas fa-train"></i> Train Details
+      </h3>
+
+      <div class="grid-2">
+        <div class="form-group">
+          <label>Train Number</label>
+          <input type="text" name="train_number" id="trainNumber"
+                 placeholder="e.g. 12951" pattern="\d{4,5}" maxlength="5" required
+                 oninput="fetchTrainName(this.value)"/>
+          <div id="trainNameHint" class="text-muted" style="margin-top:5px;font-size:12px"></div>
+        </div>
+        <div class="form-group">
+          <label>Travel Date</label>
+          <input type="text" name="travel_date" id="travelDate"
+                 placeholder="DD-MM-YYYY" pattern="\d{2}-\d{2}-\d{4}" maxlength="10" required
+                 oninput="formatDate(this)"/>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="form-group">
+          <label>From Station Code</label>
+          <input type="text" name="from_station" placeholder="e.g. NDLS" maxlength="6"
+                 style="text-transform:uppercase" required/>
+        </div>
+        <div class="form-group">
+          <label>To Station Code</label>
+          <input type="text" name="to_station" placeholder="e.g. BCT" maxlength="6"
+                 style="text-transform:uppercase" required/>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Seat Class</label>
+        <select name="seat_class" required>
+          <option value="" disabled selected>Select class…</option>
+          {% for cls in classes %}
+          <option value="{{ cls }}">{{ cls }} — {{ {
+            '1A':'First AC','2A':'Second AC','3A':'Third AC',
+            'SL':'Sleeper','CC':'Chair Car (CC)','2S':'Second Seating',
+            'EC':'Executive Chair','FC':'First Class'}.get(cls, cls) }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="divider"></div>
+      <h3 style="font-size:14px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:16px">
+        <i class="fas fa-bell"></i> Alert Threshold
+      </h3>
+
+      <div class="form-group">
+        <label>Threshold Type</label>
+        <select name="threshold_type" id="threshType" onchange="toggleThreshHelp()">
+          <option value="absolute">Absolute — alert when seats ≤ N</option>
+          <option value="percent">Percentage — alert when seats drop by X%</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label id="threshLabel">Seat Count Threshold</label>
+        <input type="number" name="threshold_value" id="threshValue"
+               placeholder="e.g. 10" min="0" step="1" required/>
+        <div id="threshHelp" class="text-muted" style="margin-top:5px;font-size:12px">
+          Alert fires when available seats fall to this number or below.
+        </div>
+      </div>
+
+      <div class="divider"></div>
+      <h3 style="font-size:14px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:16px">
+        <i class="fas fa-envelope"></i> Notification
+      </h3>
+
+      <div class="form-group">
+        <label>Alert Email</label>
+        <input type="email" name="notify_email" value="{{ default_email }}" required/>
+        <div class="text-muted" style="margin-top:5px;font-size:12px">Email alert will be sent here when threshold is crossed.</div>
+      </div>
+
+      <div style="display:flex;gap:12px;margin-top:8px">
+        <button type="submit" class="btn btn-primary btn-full">
+          <i class="fas fa-satellite-dish"></i> Start Tracking
+        </button>
+        <a href="{{ url_for('main.dashboard') }}" class="btn btn-secondary">Cancel</a>
+      </div>
+    </form>
+  </div>
+
+  <div class="card" style="background:rgba(59,130,246,.05);border-color:rgba(59,130,246,.2)">
+    <div style="font-size:13px;color:var(--muted);line-height:1.7">
+      <strong style="color:var(--text)">ℹ️ How it works</strong><br/>
+      The background worker checks availability every 60 minutes. During IRCTC maintenance
+      (11:30 PM – 12:30 AM IST), checks are skipped automatically to save API credits.
+      You'll receive an email the moment seats cross your threshold.
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function formatDate(input) {
+  let v = input.value.replace(/\D/g,'');
+  if (v.length >= 3) v = v.slice(0,2)+'-'+v.slice(2);
+  if (v.length >= 6) v = v.slice(0,5)+'-'+v.slice(5,9);
+  input.value = v;
+}
+
+let trainTimer;
+// function fetchTrainName(num) {
+//   clearTimeout(trainTimer);
+//   if (num.length < 4) { document.getElementById('trainNameHint').textContent=''; return; }
+//   trainTimer = setTimeout(async () => {
+//     try {
+//       const r = await fetch(`/api/stations?q=${num}`);
+//       document.getElementById('trainNameHint').textContent = '✓ Train number recorded';
+//     } catch(e) {}
+//   }, 600);
+// }
+function fetchTrainName(num) {
+  const hint = document.getElementById('trainNameHint');
+  if (/^\d{5}$/.test(num)) {
+    hint.textContent = '✓ Valid train number';
+    hint.style.color = 'green';
+  } else {
+    hint.textContent = num.length > 0 ? 'Must be exactly 5 digits' : '';
+    hint.style.color = 'red';
+  }
+}
+
+function toggleThreshHelp() {
+  const t = document.getElementById('threshType').value;
+  document.getElementById('threshLabel').textContent =
+    t === 'percent' ? 'Percentage Drop (%)' : 'Seat Count Threshold';
+  document.getElementById('threshHelp').textContent =
+    t === 'percent'
+      ? 'Alert fires when available seats drop by this % from the initial count.'
+      : 'Alert fires when available seats fall to this number or below.';
+  document.getElementById('threshValue').placeholder = t === 'percent' ? 'e.g. 50' : 'e.g. 10';
+  document.getElementById('threshValue').max = t === 'percent' ? '100' : '';
+}
+</script>
+{% endblock %}
