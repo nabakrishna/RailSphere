@@ -1,0 +1,23 @@
+# Environments
+.venv/
+venv/
+
+
+# Secrets & Local Configurations
+.env
+
+# Flask Instance Configuration & Local Databases
+instance/
+
+# Python Bytecode Caching
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Operating System Files
+.DS_Store
+Thumbs.db
+
+seat.py
+check_seat.py
