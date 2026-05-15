@@ -137,5 +137,4 @@ SQLite file is created automatically at `instance/irctc_tracker.db`.
 
 ---
 
-## License
 
