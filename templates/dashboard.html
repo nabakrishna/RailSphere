@@ -1,40 +1,44 @@
 {% extends "base.html" %}
-{% block title %}Dashboard — IRCTC Tracker{% endblock %}
+{% block title %}Dashboard — RailWatch{% endblock %}
 
 {% block content %}
-<div class="container">
-  <div class="flex-between" style="margin-bottom:8px">
-    <div>
-      <h1 class="page-title">Dashboard</h1>
-      <p class="page-sub">Hello, <strong>{{ current_user.username }}</strong> — here are your tracking tasks.</p>
+<div class="page">
+
+  <div class="page-header-row">
+    <div class="page-header" style="margin-bottom:0">
+      <h1>Dashboard</h1>
+      <p>Tracking tasks for <strong>{{ current_user.username }}</strong></p>
     </div>
     <a href="{{ url_for('tasks.new_task') }}" class="btn btn-primary">
-      <i class="fas fa-plus"></i> New Task
+      <i class="fas fa-plus" style="font-size:11px"></i> New task
     </a>
   </div>
 
-  <div class="stats-grid">
-    <div class="stat-card">
-      <div class="stat-val">{{ total }}</div>
-      <div class="stat-label">Total Tasks</div>
+  <div class="stats-row">
+    <div class="stat-card" style="border-top:3px solid var(--gray-300)">
+      <div class="stat-num">{{ total }}</div>
+      <div class="stat-label">Total tasks</div>
     </div>
-    <div class="stat-card">
-      <div class="stat-val" style="color:#34d399">{{ active }}</div>
+    <div class="stat-card" style="border-top:3px solid var(--green)">
+      <div class="stat-num" style="color:var(--green)">{{ active }}</div>
       <div class="stat-label">Active</div>
     </div>
-    <div class="stat-card">
-      <div class="stat-val" style="color:#60a5fa">{{ notified }}</div>
+    <div class="stat-card" style="border-top:3px solid var(--blue)">
+      <div class="stat-num" style="color:var(--blue)">{{ notified }}</div>
       <div class="stat-label">Notified</div>
     </div>
-    <div class="stat-card">
-      <div class="stat-val" style="font-size:18px;color:var(--muted)">60 min</div>
-      <div class="stat-label">Check Interval</div>
+    <div class="stat-card" style="border-top:3px solid var(--amber)">
+      <div class="stat-num" style="color:var(--amber);font-size:20px">2 min</div>
+      <div class="stat-label">Check interval</div>
     </div>
   </div>
 
   <div class="card">
     <div class="card-header">
-      <div class="card-title"><span class="icon"><i class="fas fa-list"></i></span>Tracking Tasks</div>
+      <div class="card-title">
+        <div class="ct-icon"><i class="fas fa-list-ul"></i></div>
+        Tracking tasks
+      </div>
     </div>
 
     {% if tasks %}
@@ -42,54 +46,56 @@
       <table>
         <thead>
           <tr>
-            <th>#</th>
             <th>Train</th>
             <th>Date</th>
             <th>Class</th>
             <th>Route</th>
-            <th>Last Seen</th>
+            <th>Seats seen</th>
             <th>Threshold</th>
             <th>Status</th>
-            <th>Actions</th>
+            <th style="text-align:right">Actions</th>
           </tr>
         </thead>
         <tbody>
           {% for task in tasks %}
           <tr>
-            <td class="mono" style="color:var(--muted)">{{ task.id }}</td>
             <td>
-              <div style="font-weight:600" class="mono">{{ task.train_number }}</div>
-              <div class="text-muted" style="font-size:12px">{{ task.train_name or '—' }}</div>
+              <span class="fw-600 mono" style="font-size:15px">{{ task.train_number }}</span>
+              {% if task.train_name %}
+                <div class="text-xs color-muted">{{ task.train_name }}</div>
+              {% endif %}
             </td>
-            <td class="mono" style="font-size:13px">{{ task.travel_date }}</td>
+            <td class="mono text-sm">{{ task.travel_date }}</td>
             <td>
-              <span class="badge badge-active" style="font-size:11px">{{ task.seat_class }}</span>
+              <span style="background:var(--gray-100);color:var(--gray-700);padding:2px 8px;border-radius:4px;font-size:12px;font-weight:600">
+                {{ task.seat_class }}
+              </span>
             </td>
-            <td class="mono" style="font-size:13px">{{ task.from_station }} → {{ task.to_station }}</td>
+            <td class="mono text-sm">{{ task.from_station }} → {{ task.to_station }}</td>
             <td>
               {% if task.last_availability %}
-                <span style="font-weight:600;color:{% if task.last_availability|int <= (task.target_threshold or 0) %}var(--danger){% else %}var(--success){% endif %}">
-                  {{ task.last_availability }} seats
+                {% set s = task.last_availability | int %}
+                <span class="fw-600" style="color:{% if s >= (task.target_threshold or 0) %}var(--green){% else %}var(--red){% endif %}">
+                  {{ task.last_availability }}
                 </span>
+                <span class="text-xs color-muted"> seats</span>
               {% else %}
-                <span class="text-muted">Pending</span>
+                <span class="color-muted text-sm">Pending</span>
               {% endif %}
             </td>
-            <td class="mono" style="font-size:13px">
-              ≤ {{ task.target_threshold or '—' }}
+            <td class="mono text-sm">
+              ≥ {{ task.target_threshold if task.target_threshold is not none else '—' }}
               {% if task.threshold_type == 'percent' %}
-                <div class="text-muted" style="font-size:11px">({{ task.threshold_value|int }}% drop)</div>
+                <div class="text-xs color-muted">{{ task.threshold_value | int }}% drop</div>
               {% endif %}
             </td>
+            <td><span class="badge badge-{{ task.status | lower }}">{{ task.status }}</span></td>
             <td>
-              <span class="badge badge-{{ task.status | lower }}">{{ task.status }}</span>
-            </td>
-            <td>
-              <div class="flex-gap">
+              <div class="flex-row" style="justify-content:flex-end;gap:6px">
                 <a href="{{ url_for('tasks.task_detail', task_id=task.id) }}" class="btn btn-secondary btn-sm">View</a>
                 <form method="POST" action="{{ url_for('tasks.pause_task', task_id=task.id) }}" style="display:inline">
                   <button type="submit" class="btn btn-secondary btn-sm">
-                    {{ '▶ Resume' if task.status == 'Paused' else '⏸ Pause' }}
+                    {{ 'Resume' if task.status == 'Paused' else 'Pause' }}
                   </button>
                 </form>
                 <form method="POST" action="{{ url_for('tasks.delete_task', task_id=task.id) }}" style="display:inline"
@@ -104,13 +110,16 @@
       </table>
     </div>
     {% else %}
-    <div style="text-align:center;padding:48px 20px">
-      <div style="font-size:48px;margin-bottom:16px">🚂</div>
-      <div style="font-size:18px;font-weight:600;margin-bottom:8px">No tracking tasks yet</div>
-      <div class="text-muted" style="margin-bottom:20px">Create your first task to start monitoring seat availability.</div>
-      <a href="{{ url_for('tasks.new_task') }}" class="btn btn-primary">+ Create Task</a>
+    <div class="empty-state">
+      <div class="es-icon">🚂</div>
+      <h3>No tracking tasks yet</h3>
+      <p>Create your first task to start monitoring seat availability.</p>
+      <a href="{{ url_for('tasks.new_task') }}" class="btn btn-primary">
+        <i class="fas fa-plus" style="font-size:11px"></i> Create task
+      </a>
     </div>
     {% endif %}
   </div>
+
 </div>
 {% endblock %}

@@ -1,18 +1,18 @@
 {% extends "base.html" %}
-{% block title %}Verify Email — IRCTC Tracker{% endblock %}
+{% block title %}Verify Email — RailWatch{% endblock %}
 
 {% block content %}
-<div class="auth-wrap">
-  <div class="auth-card" style="max-width:420px">
-    <div class="auth-logo">
-      <span class="logo-icon">📬</span>
-      <h1>Check your email</h1>
-      <p>We sent a 6-digit OTP to<br><strong style="color:var(--accent)">{{ email }}</strong></p>
+<div class="auth-page">
+  <div class="auth-card">
+    <div class="auth-header">
+      <div class="auth-icon"><i class="fas fa-envelope-open-text"></i></div>
+      <h1>Check your inbox</h1>
+      <p>We sent a 6-digit code to<br/><strong style="color:var(--gray-800)">{{ email }}</strong></p>
     </div>
 
     <form method="POST" action="{{ url_for('auth.verify_otp') }}">
       <div class="form-group">
-        <label style="text-align:center;display:block;margin-bottom:12px">Enter OTP</label>
+        <label class="form-label" style="text-align:center;display:block">Enter verification code</label>
         <input
           type="text"
           name="otp"
@@ -24,38 +24,27 @@
           autocomplete="one-time-code"
           required
           autofocus
-          style="
-            text-align: center;
-            font-size: 32px;
-            font-weight: 800;
-            letter-spacing: 10px;
-            font-family: monospace;
-            padding: 18px 12px;
-          "
+          class="input-mono"
+          style="text-align:center;font-size:28px;font-weight:700;letter-spacing:8px;padding:14px 12px"
         />
-        <div class="text-muted" style="margin-top:8px;text-align:center;font-size:13px">
-          ⏱ Expires in 10 minutes
+        <div class="form-hint" style="text-align:center">
+          <i class="fas fa-clock" style="font-size:11px"></i> Expires in 10 minutes
         </div>
       </div>
-
-      <button type="submit" class="btn btn-primary btn-full" style="margin-top:8px">
-        Verify Email →
+      <button type="submit" class="btn btn-primary btn-full btn-lg" style="margin-top:8px">
+        Verify email
       </button>
     </form>
 
     <div class="divider"></div>
 
-    <p class="text-center text-muted" style="font-size:13px">
-      Didn't receive it?
-    </p>
     <form method="POST" action="{{ url_for('auth.resend_otp') }}">
-      <button type="submit" class="btn btn-full" style="background:var(--surface2);color:var(--text);margin-top:0">
-        Resend OTP
+      <button type="submit" class="btn btn-secondary btn-full" style="margin-bottom:14px">
+        <i class="fas fa-redo" style="font-size:12px"></i> Resend code
       </button>
     </form>
-
-    <p class="text-center text-muted" style="margin-top:16px;font-size:13px">
-      Wrong account? <a href="{{ url_for('auth.register') }}" style="color:var(--accent)">Register again</a>
+    <p class="text-muted" style="text-align:center">
+      Wrong account? <a href="{{ url_for('auth.register') }}" style="color:var(--blue);font-weight:600">Register again</a>
     </p>
   </div>
 </div>

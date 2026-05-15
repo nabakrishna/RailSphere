@@ -1,90 +1,141 @@
 {% extends "base.html" %}
-{% block title %}Task #{{ task.id }} — IRCTC Tracker{% endblock %}
+{% block title %}Task #{{ task.id }} — RailWatch{% endblock %}
 
 {% block content %}
-<div class="container" style="max-width:760px">
-  <div class="flex-between" style="margin-bottom:24px">
+<div class="page page-sm" style="max-width:720px">
+
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:24px">
     <div>
-      <a href="{{ url_for('main.dashboard') }}" style="color:var(--muted);text-decoration:none;font-size:13px">← Dashboard</a>
-      <h1 class="page-title" style="margin-top:4px">Task #{{ task.id }}</h1>
+      <a href="{{ url_for('main.dashboard') }}" class="text-muted text-sm" style="text-decoration:none">
+        <i class="fas fa-arrow-left" style="font-size:11px"></i> Dashboard
+      </a>
+      <h1 style="font-size:22px;font-weight:700;margin-top:4px;letter-spacing:-.3px">
+        Task <span class="color-muted">#{{ task.id }}</span> — Train {{ task.train_number }}
+      </h1>
     </div>
-    <span class="badge badge-{{ task.status | lower }}" style="font-size:14px;padding:6px 16px">{{ task.status }}</span>
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <span class="badge badge-{{ task.status | lower }}" style="font-size:13px;padding:5px 14px">{{ task.status }}</span>
+      <form method="POST" action="{{ url_for('tasks.check_now', task_id=task.id) }}" style="display:inline">
+        <button type="submit" class="btn btn-secondary btn-sm">
+          <i class="fas fa-bolt" style="font-size:11px"></i> Check now
+        </button>
+      </form>
+      <form method="POST" action="{{ url_for('tasks.pause_task', task_id=task.id) }}" style="display:inline">
+        <button type="submit" class="btn btn-secondary btn-sm">
+          {% if task.status == 'Paused' %}
+            <i class="fas fa-play" style="font-size:11px"></i> Resume
+          {% else %}
+            <i class="fas fa-pause" style="font-size:11px"></i> Pause
+          {% endif %}
+        </button>
+      </form>
+      <form method="POST" action="{{ url_for('tasks.delete_task', task_id=task.id) }}" style="display:inline"
+            onsubmit="return confirm('Permanently delete this task?')">
+        <button type="submit" class="btn btn-danger btn-sm">
+          <i class="fas fa-trash" style="font-size:11px"></i> Delete
+        </button>
+      </form>
+    </div>
   </div>
 
+  <!-- Train Details -->
   <div class="card">
     <div class="card-header">
-      <div class="card-title"><span class="icon">🚆</span>Train Details</div>
-      <div class="flex-gap">
-        <form method="POST" action="{{ url_for('tasks.check_now', task_id=task.id) }}">
-          <button type="submit" class="btn btn-secondary btn-sm">⚡ Check Now</button>
-        </form>
-        <form method="POST" action="{{ url_for('tasks.pause_task', task_id=task.id) }}">
-          <button type="submit" class="btn btn-secondary btn-sm">
-            {{ '▶ Resume' if task.status == 'Paused' else '⏸ Pause' }}
-          </button>
-        </form>
-        <form method="POST" action="{{ url_for('tasks.delete_task', task_id=task.id) }}"
-              onsubmit="return confirm('Delete this task?')">
-          <button type="submit" class="btn btn-danger btn-sm">🗑 Delete</button>
-        </form>
+      <div class="card-title">
+        <div class="ct-icon"><i class="fas fa-train"></i></div>
+        Train details
       </div>
     </div>
-
-    <div class="grid-2">
+    <div class="detail-grid">
       {% for label, val in [
-        ('Train Number', task.train_number),
-        ('Train Name', task.train_name or '—'),
-        ('Travel Date', task.travel_date),
-        ('Seat Class', task.seat_class),
-        ('From Station', task.from_station),
-        ('To Station', task.to_station),
+        ('Train number',  task.train_number),
+        ('Train name',    task.train_name or '—'),
+        ('Travel date',   task.travel_date),
+        ('Seat class',    task.seat_class),
+        ('From station',  task.from_station),
+        ('To station',    task.to_station),
       ] %}
-      <div style="margin-bottom:16px">
-        <div class="text-muted" style="font-size:12px;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">{{ label }}</div>
-        <div style="font-weight:600;font-family:var(--mono)">{{ val }}</div>
+      <div class="detail-item">
+        <div class="dl">{{ label }}</div>
+        <div class="dv mono">{{ val }}</div>
       </div>
       {% endfor %}
     </div>
   </div>
 
+  <!-- Monitoring Status -->
   <div class="card">
-    <div class="card-header"><div class="card-title"><span class="icon">📊</span>Monitoring Status</div></div>
-    <div class="grid-2">
+    <div class="card-header">
+      <div class="card-title">
+        <div class="ct-icon"><i class="fas fa-chart-line"></i></div>
+        Monitoring status
+      </div>
+    </div>
+    <div class="detail-grid">
       {% set avail_num = task.last_availability | int if task.last_availability else -1 %}
-      {% for label, val, color in [
-        ('Current Availability', (task.last_availability + ' seats') if task.last_availability else 'Not checked yet',
-          'var(--danger)' if (avail_num >= 0 and avail_num <= (task.target_threshold or 0)) else 'var(--success)'),
-        ('Your Threshold', ('≤ ' + task.target_threshold|string) if task.target_threshold else '—', 'var(--text)'),
-        ('Initial Count', task.initial_count|string if task.initial_count else 'Pending first check', 'var(--text)'),
-        ('Threshold Type', task.threshold_type|capitalize + (' (' + task.threshold_value|int|string + '%)' if task.threshold_type == 'percent' else ''), 'var(--text)'),
-        ('Checks Run', task.check_count|string, 'var(--text)'),
-        ('Last Checked', task.last_checked.strftime('%d %b %Y, %I:%M %p') if task.last_checked else 'Never', 'var(--text)'),
-      ] %}
-      <div style="margin-bottom:16px">
-        <div class="text-muted" style="font-size:12px;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">{{ label }}</div>
-        <div style="font-weight:600;color:{{ color }}">{{ val }}</div>
+      <div class="detail-item">
+        <div class="dl">Seats available (last seen)</div>
+        <div class="dv" style="font-size:20px;color:{% if avail_num >= (task.target_threshold or 0) and avail_num >= 0 %}var(--green){% elif avail_num >= 0 %}var(--red){% else %}var(--gray-400){% endif %}">
+          {% if task.last_availability %}{{ task.last_availability }}{% else %}Not checked yet{% endif %}
+        </div>
       </div>
-      {% endfor %}
+      <div class="detail-item">
+        <div class="dl">Your threshold</div>
+        <div class="dv">≥ {{ task.target_threshold if task.target_threshold is not none else '—' }}</div>
+      </div>
+      <div class="detail-item">
+        <div class="dl">Initial count</div>
+        <div class="dv">{{ task.initial_count if task.initial_count is not none else 'Pending first check' }}</div>
+      </div>
+      <div class="detail-item">
+        <div class="dl">Threshold type</div>
+        <div class="dv">{{ task.threshold_type | capitalize }}
+          {% if task.threshold_type == 'percent' %}({{ task.threshold_value | int }}% drop){% endif %}
+        </div>
+      </div>
+      <div class="detail-item">
+        <div class="dl">Total checks run</div>
+        <div class="dv">{{ task.check_count or 0 }}</div>
+      </div>
+      <div class="detail-item">
+        <div class="dl">Last checked</div>
+        <div class="dv text-sm">
+          {% if task.last_checked %}
+            {{ task.last_checked.strftime('%d %b %Y, %I:%M %p') }} IST
+          {% else %}Never{% endif %}
+        </div>
+      </div>
     </div>
   </div>
 
+  <!-- Notification Log -->
   <div class="card">
-    <div class="card-header"><div class="card-title"><span class="icon">📧</span>Notification Log</div></div>
+    <div class="card-header">
+      <div class="card-title">
+        <div class="ct-icon"><i class="fas fa-envelope"></i></div>
+        Notification log
+      </div>
+    </div>
     {% if logs %}
     <div class="table-wrap">
       <table>
         <thead>
-          <tr><th>Time</th><th>Sent To</th><th>Seats</th><th>Result</th></tr>
+          <tr>
+            <th>Time</th>
+            <th>Sent to</th>
+            <th>Seats at alert</th>
+            <th>Result</th>
+          </tr>
         </thead>
         <tbody>
           {% for log in logs %}
           <tr>
-            <td class="mono" style="font-size:12px">{{ log.sent_at.strftime('%d %b, %I:%M %p') }}</td>
-            <td>{{ log.sent_to }}</td>
-            <td class="mono">{{ log.seats_avail if log.seats_avail is not none else '—' }}</td>
+            <td class="mono text-sm">{{ log.sent_at.strftime('%d %b %Y, %I:%M %p') }}</td>
+            <td class="text-sm">{{ log.sent_to }}</td>
+            <td class="mono fw-600">{{ log.seats_avail if log.seats_avail is not none else '—' }}</td>
             <td>
               {% if log.success %}
-                <span class="badge badge-active">Sent ✓</span>
+                <span class="badge badge-active">Sent</span>
               {% else %}
                 <span class="badge badge-expired" title="{{ log.error_msg }}">Failed</span>
               {% endif %}
@@ -95,10 +146,13 @@
       </table>
     </div>
     {% else %}
-    <div class="text-muted" style="text-align:center;padding:24px">
-      No notifications sent yet. Alerts will appear here when the threshold is crossed.
+    <div class="empty-state" style="padding:32px">
+      <div class="es-icon" style="font-size:28px">📭</div>
+      <h3 style="font-size:14px">No notifications sent yet</h3>
+      <p>Alerts will appear here once your threshold is crossed.</p>
     </div>
     {% endif %}
   </div>
+
 </div>
 {% endblock %}

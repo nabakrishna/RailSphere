@@ -1,64 +1,91 @@
 {% extends "base.html" %}
-{% block title %}IRCTC Seat Tracker — Never Miss a Seat{% endblock %}
+{% block title %}RailWatch — IRCTC Seat Availability Tracker{% endblock %}
 
 {% block content %}
-<div class="container" style="padding-top:60px;text-align:center;max-width:700px;margin:0 auto">
-  <div style="font-size:64px;margin-bottom:20px;animation:float 3s ease-in-out infinite">🚆</div>
-  <h1 style="font-size:42px;font-weight:700;line-height:1.1;margin-bottom:16px;
-             background:linear-gradient(135deg,#e2e8f0,#60a5fa,#06b6d4);
-             -webkit-background-clip:text;-webkit-text-fill-color:transparent">
-    Never Miss a Seat<br/>on Indian Railways
-  </h1>
-  <p style="font-size:17px;color:var(--muted);max-width:480px;margin:0 auto 36px;line-height:1.7">
-    Automatically monitor IRCTC seat availability and get instant email alerts
-    when seats drop below your threshold — 24/7, every 60 minutes.
-  </p>
-  <div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap">
-    <a href="{{ url_for('auth.register') }}" class="btn btn-primary" style="font-size:16px;padding:14px 32px">
-      🚀 Get Started Free
-    </a>
-    <a href="{{ url_for('auth.login') }}" class="btn btn-secondary" style="font-size:16px;padding:14px 28px">
-      Login
-    </a>
-  </div>
-
-  <div class="stats-grid" style="margin-top:60px;max-width:500px;margin-left:auto;margin-right:auto">
-    <div class="stat-card" style="text-align:left">
-      <div class="stat-val">60</div>
-      <div class="stat-label">Min Check Interval</div>
+<div style="background:white;border-bottom:1px solid var(--gray-200);padding:64px 24px 60px">
+  <div style="max-width:600px;margin:0 auto;text-align:center">
+    <div style="display:inline-flex;align-items:center;gap:7px;background:var(--blue-lt);color:var(--blue);padding:5px 14px;border-radius:20px;font-size:12px;font-weight:600;margin-bottom:22px;letter-spacing:.3px">
+      <i class="fas fa-circle" style="font-size:7px"></i> LIVE MONITORING
     </div>
-    <div class="stat-card" style="text-align:left">
-      <div class="stat-val" style="font-size:22px">24/7</div>
-      <div class="stat-label">Auto Monitoring</div>
-    </div>
-    <div class="stat-card" style="text-align:left">
-      <div class="stat-val">📧</div>
-      <div class="stat-label">Email Alerts</div>
-    </div>
-  </div>
-
-  <div class="card" style="margin-top:40px;text-align:left">
-    <div class="card-header"><div class="card-title"><span class="icon">✨</span>Features</div></div>
-    <div class="grid-2" style="gap:20px">
-      {% for f in [
-        ('🎯','Smart Thresholds','Set absolute seat count or 50% drop alerts'),
-        ('😴','Maintenance Skip','Sleeps during IRCTC downtime (11:30PM–12:30AM)'),
-        ('🔐','Secure Accounts','Email verification + password reset'),
-        ('📊','Live Dashboard','Track all jobs, history, and notification logs'),
-      ] %}
-      <div style="display:flex;gap:12px;align-items:flex-start">
-        <span style="font-size:22px">{{ f[0] }}</span>
-        <div>
-          <div style="font-weight:600;margin-bottom:4px">{{ f[1] }}</div>
-          <div class="text-muted">{{ f[2] }}</div>
-        </div>
-      </div>
-      {% endfor %}
+    <h1 style="font-size:36px;font-weight:800;line-height:1.15;color:var(--gray-900);letter-spacing:-.5px;margin-bottom:16px">
+      Never miss a seat<br/>on Indian Railways
+    </h1>
+    <p style="font-size:16px;color:var(--gray-500);max-width:440px;margin:0 auto 32px;line-height:1.7">
+      RailWatch monitors IRCTC seat availability and sends you an email alert the moment seats meet your threshold — automatically, around the clock.
+    </p>
+    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+      <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg">
+        Get started free <i class="fas fa-arrow-right" style="font-size:12px"></i>
+      </a>
+      <a href="{{ url_for('auth.login') }}" class="btn btn-secondary btn-lg">Log in</a>
     </div>
   </div>
 </div>
 
-<style>
-@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
-</style>
+<div class="page" style="max-width:900px">
+  <div class="stats-row" style="margin-bottom:36px">
+    {% for val, label, color in [
+      ('24 / 7', 'Automatic monitoring', '#2563eb'),
+      ('Email',  'Instant alerts',       '#16a34a'),
+      ('2 min',  'Check interval',       '#d97706'),
+      ('Free',   'No cost to use',       '#7c3aed'),
+    ] %}
+    <div class="stat-card" style="border-top:3px solid {{ color }}">
+      <div class="stat-num" style="font-size:22px;color:{{ color }}">{{ val }}</div>
+      <div class="stat-label">{{ label }}</div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">
+        <div class="ct-icon"><i class="fas fa-star"></i></div>
+        How it works
+      </div>
+    </div>
+    <div class="card-body">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:24px">
+        {% for step, title, desc in [
+          ('1', 'Create a tracking task',    'Enter your train number, route, travel date, and seat class.'),
+          ('2', 'Set your alert threshold',  'Choose a seat count. We alert you when availability meets it.'),
+          ('3', 'Relax — we watch for you',  'The worker checks every 2 minutes and emails you instantly.'),
+        ] %}
+        <div style="display:flex;gap:14px">
+          <div style="width:32px;height:32px;background:var(--blue);color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0">{{ step }}</div>
+          <div>
+            <div style="font-weight:600;color:var(--gray-800);margin-bottom:5px">{{ title }}</div>
+            <div class="text-muted">{{ desc }}</div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+    {% for icon, title, desc in [
+      ('fa-bell',       'Smart thresholds',      'Set an absolute seat count or percentage drop to trigger your alert.'),
+      ('fa-moon',       'Maintenance-aware',      'Automatically skips checks during IRCTC downtime (11:30 PM – 12:30 AM).'),
+      ('fa-envelope',   'Email notifications',    'Receive a detailed alert email the moment your threshold is crossed.'),
+      ('fa-chart-bar',  'Full activity history',  'View all past checks, notification logs, and task status from your dashboard.'),
+    ] %}
+    <div class="card" style="margin-bottom:0">
+      <div class="card-body" style="padding:20px">
+        <div style="width:36px;height:36px;background:var(--blue-lt);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--blue);margin-bottom:12px">
+          <i class="fas {{ icon }}"></i>
+        </div>
+        <div style="font-weight:600;color:var(--gray-800);margin-bottom:5px">{{ title }}</div>
+        <div class="text-muted text-sm">{{ desc }}</div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <div style="text-align:center;padding:40px 0 10px">
+    <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg">
+      Create your free account
+    </a>
+  </div>
+</div>
 {% endblock %}
