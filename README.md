@@ -121,8 +121,8 @@ https://rapidapi.com/IRCTC1/api/indian-railway-irctc
 
 Endpoints used:
 - `GET /api/v3/checkSeatAvailability` — seat count
-- `GET /api/v3/getTrainDetails` — train name lookup
-- `GET /api/v3/getStationByName` — station autocomplete
+- `GET /api/v3/getTrainDetails` — train name lookup  -nope
+- `GET /api/v3/getStationByName` — station autocomplete  -nope
 
 ---
 
@@ -137,16 +137,5 @@ SQLite file is created automatically at `instance/irctc_tracker.db`.
 
 ---
 
-## Deployment Tips
-
-- Use **Gunicorn** for production: `gunicorn -w 1 run:app`  
-  (Use 1 worker to keep the APScheduler singleton; or run the scheduler as a separate process)
-- For multi-worker setups, run the scheduler in a dedicated process using `APScheduler`'s `BlockingScheduler`
-- Set `DEBUG=False` in production
-- Use a persistent volume for the SQLite file
-
----
-
 ## License
 
-MIT
