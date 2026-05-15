@@ -53,7 +53,7 @@ irctc_tracker/
 ### 1. Install dependencies
 
 ```bash
-cd irctc_tracker
+cd <name-irctc-tracker>
 pip install -r requirements.txt
 ```
 
