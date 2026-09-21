@@ -21,3 +21,8 @@ Thumbs.db
 
 seat.py
 check_seat.py
+
+
+database/backup.sql
+*.dump
+*.backup
